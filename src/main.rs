@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use colored::*;
 
 #[derive(Debug)]
-// for colored output
+// struct for colored output
 struct Log
 {
     err:    &'static str,
@@ -16,6 +16,7 @@ struct Log
 struct Manager
 {
     local_todos: HashMap<String, HashMap<&'static str, String>>,
+    // big hash map that holds hashmaps
     log: Log
 }
 
@@ -30,7 +31,8 @@ impl Manager
             println!(r#"{}A to-do with title '{}' already exists{}"#, self.log.err, title, self.log.reset);
             return;
         }
-         
+        
+        // creates a sub hash map that contains data about your todo under the 'title'
         let mut sub_todo = HashMap::new();
         sub_todo.insert("title", title.to_string());
         sub_todo.insert("state", String::from("ongoing"));
@@ -62,18 +64,14 @@ impl Manager
             return;
         }
 
+        // getting to the sub hashmap
         if let Some(todo) = self.local_todos.get_mut(title)
         {
+            // getting to the state from the sub hashmap
             if let Some(state) = todo.get_mut("state")
             {
-                if *state == "ongoing" 
-                {
-                    *state = "finished".to_string();
-                }
-                else if *state == "finished"
-                {
-                    *state = "ongoing".to_string();
-                }
+                if *state == "ongoing"  { *state = "finished".to_string(); }
+                else if *state == "finished" { *state = "ongoing".to_string();}
                 else
                 {
                     println!(r#"{}Invalid state found, defaulting to unfinished{}"#, self.log.info, self.log.reset);
@@ -91,6 +89,7 @@ impl Manager
         for (key, value) in self.local_todos.iter() 
         {
             let state = value.get("state").expect("keys");
+            // {{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}
             println!("{}{}{} - {}", self.log.info, key, self.log.reset, if state == "finished" {state.green()} else {state.red()} );
         } 
     }
@@ -98,7 +97,6 @@ impl Manager
 
 fn main() 
 {
-    // tests
     let log = Log {
         err:    "\x1b[31m",
         succs:  "\x1b[32m",
@@ -111,6 +109,7 @@ fn main()
         log
     };
 
+    // tests
     test.init();
     test.add_todo("j");
     test.add_todo("j");
