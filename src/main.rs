@@ -19,7 +19,7 @@ struct Manager
     local_todos: HashMap<String, HashMap<&'static str, String>>,
     // big hash map that holds hashmaps
     log: Log 
-    // struct for colored output in a log-like style
+    // using struct for colored output in a log-like style
 
 }
 
