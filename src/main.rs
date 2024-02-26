@@ -1,4 +1,5 @@
 use std::io;
+use std::io::Write;
 use std::collections::HashMap;
 use colored::*;
 
@@ -17,13 +18,13 @@ struct Manager
 {
     local_todos: HashMap<String, HashMap<&'static str, String>>,
     // big hash map that holds hashmaps
-    log: Log
+    log: Log 
+    // struct for colored output in a log-like style
+
 }
 
 impl Manager
 {
-    fn init(&self) {}
-
     fn add_todo(&mut self, title: &str)
     {
         if self.local_todos.contains_key(title)
@@ -37,7 +38,7 @@ impl Manager
         sub_todo.insert("title", title.to_string());
         sub_todo.insert("state", String::from("ongoing"));
 
-        // adding the to-do content to the big juicy daddy to-do
+        // adding the sub to-do content to the big juicy daddy to-do
         self.local_todos.insert(title.to_string(), sub_todo);
 
         println!(r#"{}Added to-do{}"#, self.log.succs, self.log.reset);
@@ -52,6 +53,7 @@ impl Manager
         }
         
         self.local_todos.remove(title);
+        // comment.
 
         println!(r#"{}To-do with title '{}' was removed{}"#, self.log.err, title,self.log.reset);
     }
@@ -104,19 +106,65 @@ fn main()
         reset:  "\x1b[0m"
     };
 
-    let mut test = Manager {
+    let mut mng = Manager {
         local_todos: HashMap::new(),
         log
     };
+    
+    loop
+    {
+        print!("cmd > ");
+        io::stdout().flush().unwrap(); // clears the output so print!() can display correctly
 
-    // tests
-    test.init();
-    test.add_todo("j");
-    test.add_todo("j");
-    test.add_todo("p");
-    test.remove_todo("e");
-    test.add_todo("k");
-    test.update_state("k");
-    test.update_state("h");
-    test.list_todos();
+        let mut input_buffer = String::new(); // user input buffer
+        io::stdin()
+            .read_line(&mut input_buffer)
+            .expect("Invalid input");
+
+        // token-like vec containing all args
+        let input: Vec<&str> = input_buffer.as_str().trim().split(" ").collect();
+        let cmd: &str = input[0].trim(); // first arg which means command 
+
+        // second arg which usually means title
+        let mut arg1: &str = ""; // the fuck you mean "value is never used" stupid rust_analyzer
+        if let Some(_) = input.get(1) // checks and sets the value if therr is an argument
+        { 
+            arg1 = input[1].trim(); 
+        }
+        else 
+        { 
+            arg1 = ""; 
+        }
+
+        // checking for cmds
+        match cmd.trim() {
+        // argument based commands
+            "add" => { // add a to do
+                if arg1 != "" { mng.add_todo(arg1) }
+                else { println!("{}Not enough args{}", mng.log.err, mng.log.reset) }
+            }
+
+            "remove" => { // unset a to do
+                if arg1 != ""  { mng.remove_todo(arg1) }
+                else { println!("{}Not enough args{}", mng.log.err, mng.log.reset) }
+            }
+
+            "update" => { // update a todo's state
+                if arg1 != "" { mng.update_state(arg1) }
+                else { println!("{}Not enough args{}", mng.log.err, mng.log.reset) }
+            }
+
+        // normal commands without args
+            "list" => mng.list_todos(), // list every set to-do
+
+            "exit" => { // exit the program
+                println!("{}Exiting...{}", mng.log.info, mng.log.reset);
+                std::process::exit(1);
+            }
+        // fallback
+            _ => {
+                if !cmd.is_empty() { println!("{}Invalid command '{}'{}", mng.log.err, cmd, mng.log.reset); }
+            }
+        }
+    }
 }
